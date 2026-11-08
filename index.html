@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Horror Voice Studio</title>
+<style>
+  :root{
+    --bg:#0b0b0d; --card:#141417; --line:#26262c; --text:#e8e6e3; --mute:#8d8a86;
+    --red:#b3121c; --red2:#e0222e; --ok:#3fb27f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 500px at 50% -10%,#2a0508 0%,var(--bg) 60%);color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;min-height:100vh}
+  .wrap{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+  h1{font-size:26px;margin:8px 0 2px;letter-spacing:.5px}
+  h1 span{color:var(--red2)}
+  .sub{color:var(--mute);margin:0 0 20px;font-size:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+  label{display:block;font-size:13px;color:var(--mute);margin:0 0 6px}
+  input[type=password],input[type=text],select,textarea{
+    width:100%;background:#0e0e11;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit}
+  textarea{min-height:240px;resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--red)}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  .meta-line{display:flex;justify-content:space-between;font-size:12px;color:var(--mute);margin-top:6px;flex-wrap:wrap;gap:6px}
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  button{background:#1d1d22;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px 16px;font-size:15px;cursor:pointer;font-family:inherit}
+  button:hover{border-color:var(--red)}
+  button.primary{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
+  button.primary:hover{background:var(--red2)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .small{padding:6px 10px;font-size:12px;border-radius:8px}
+  .status{margin-top:12px;font-size:14px;color:var(--mute);min-height:20px}
+  .status.err{color:#ff6b6b}
+  .status.ok{color:var(--ok)}
+  .bar{height:6px;background:#0e0e11;border-radius:6px;overflow:hidden;margin-top:8px;display:none}
+  .bar i{display:block;height:100%;width:0;background:var(--red);transition:width .2s}
+  audio{width:100%;margin-top:10px}
+  h2{font-size:17px;margin:0 0 12px}
+  .item{background:#0e0e11;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+  .item .t{white-space:pre-wrap;word-break:break-word;flex:1}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:#1d0a0c;border:1px solid #4a1015;color:#ffb3b8;border-radius:20px;padding:4px 10px;font-size:13px}
+  .lbl{font-size:12px;color:var(--mute);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.8px}
+  .lbl:first-of-type{margin-top:0}
+  .note{font-size:12px;color:var(--mute);margin-top:10px}
+  details summary{cursor:pointer;color:var(--mute);font-size:13px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:12px;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🩸 Horror <span>Voice</span> Studio</h1>
+  <p class="sub">Script paste karo → Sarvam se voice + title, hashtags, description sab ek jagah.</p>
+
+  <div class="card">
+    <label for="key">Sarvam API Key</label>
+    <input id="key" type="password" placeholder="sk_..." autocomplete="off">
+    <div class="meta-line"><span><label style="display:inline"><input type="checkbox" id="remember"> is browser me save rakho</label></span>
+    <span>Key sirf aapke browser se Sarvam ko jaati hai.</span></div>
+  </div>
+
+  <div class="card">
+    <label for="script">Horror Script</label>
+    <textarea id="script" placeholder="Yahan apni script paste karo (Hindi / Hinglish / English)..."></textarea>
+    <div class="meta-line"><span id="count">0 characters</span><span id="cost"></span></div>
+
+    <div class="row" style="margin-top:14px">
+      <div>
+        <label for="lang">Voice language</label>
+        <select id="lang">
+          <option value="hi-IN">Hindi / Hinglish</option>
+          <option value="en-IN">English (Indian)</option>
+          <option value="bn-IN">Bengali</option>
+          <option value="ta-IN">Tamil</option>
+          <option value="te-IN">Telugu</option>
+          <option value="mr-IN">Marathi</option>
+          <option value="gu-IN">Gujarati</option>
+          <option value="kn-IN">Kannada</option>
+          <option value="ml-IN">Malayalam</option>
+          <option value="pa-IN">Punjabi</option>
+        </select>
+      </div>
+      <div>
+        <label for="speaker">Speaker</label>
+        <select id="speaker">
+          <option value="shubh">Shubh</option>
+          <option value="aditya">Aditya</option>
+          <option value="anand">Anand</option>
+          <option value="ritu">Ritu</option>
+          <option value="simran">Simran</option>
+          <option value="roopa">Roopa</option>
+          <option value="priya">Priya</option>
+        </select>
+      </div>
+      <div>
+        <label for="pace">Pace: <b id="paceVal">0.90</b>x</label>
+        <input id="pace" type="range" min="0.5" max="1.5" step="0.05" value="0.9" style="width:100%">
+      </div>
+      <div>
+        <label for="metaLang">Metadata language</label>
+        <select id="metaLang">
+          <option value="Hinglish (Hindi in Roman script)">Hinglish</option>
+          <option value="Hindi (Devanagari)">Hindi</option>
+          <option value="English">English</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btns">
+      <button class="primary" id="btnBoth">⚡ Voice + Metadata</button>
+      <button id="btnVoice">🎙️ Sirf Voice</button>
+      <button id="btnMeta">🏷️ Sirf Metadata</button>
+    </div>
+    <div class="bar" id="bar"><i id="barfill"></i></div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="card" id="voiceCard" style="display:none">
+    <h2>🎧 Voice</h2>
+    <audio id="player" controls></audio>
+    <div class="btns"><button id="dl">⬇️ WAV download karo</button></div>
+  </div>
+
+  <div class="card" id="metaCard" style="display:none">
+    <h2>🏷️ Metadata</h2>
+    <div id="metaOut"></div>
+    <div class="btns"><button id="copyAll">📋 Sab copy karo</button></div>
+    <details style="margin-top:12px"><summary>Raw output</summary><pre id="raw"></pre></details>
+  </div>
+
+  <p class="note">Tip: pace 0.8–0.95 aur script me "..." ya chhote vaakya daalne se suspense wali feel aati hai.</p>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const TTS_URL = "https://api.sarvam.ai/text-to-speech";
+const CHAT_URL = "https://api.sarvam.ai/v1/chat/completions";
+const CHUNK_MAX = 2000; // Bulbul v3 limit 2500, safe margin
+let wavBlobUrl = null, lastMeta = null;
+
+// ---------- init ----------
+try{
+  const k = localStorage.getItem("sarvam_key");
+  if(k){ $("key").value = k; $("remember").checked = true; }
+}catch(e){}
+$("pace").addEventListener("input", () => $("paceVal").textContent = (+$("pace").value).toFixed(2));
+$("script").addEventListener("input", updateCount);
+function updateCount(){
+  const n = $("script").value.length;
+  $("count").textContent = n.toLocaleString() + " characters · " + chunkText($("script").value).length + " chunk(s)";
+  $("cost").textContent = n ? "Voice cost ≈ ₹" + (n/10000*30).toFixed(2) + " (Bulbul v3)" : "";
+}
+function setStatus(msg, type){ const s=$("status"); s.textContent=msg; s.className="status "+(type||""); }
+function setBar(p){ const b=$("bar"); b.style.display = p==null ? "none":"block"; $("barfill").style.width=(p||0)+"%"; }
+function getKey(){
+  const k = $("key").value.trim();
+  if(!k) throw new Error("Pehle Sarvam API key daalo.");
+  try{ if($("remember").checked) localStorage.setItem("sarvam_key",k); else localStorage.removeItem("sarvam_key"); }catch(e){}
+  return k;
+}
+function getScript(){
+  const t = $("script").value.trim();
+  if(!t) throw new Error("Script khaali hai.");
+  return t;
+}
+function busy(b){ ["btnBoth","btnVoice","btnMeta"].forEach(i => $(i).disabled = b); }
+function friendly(e){
+  const m = String(e.message || e);
+  if(/failed to fetch|networkerror|load failed/i.test(m))
+    return "Network/CORS error. Internet check karo; agar browser Sarvam ko block kar raha hai to ek chhota proxy (Vercel function) lagana padega.";
+  return m;
+}
+
+// ---------- chunking ----------
+function chunkText(text){
+  text = text.replace(/\r/g,"").trim();
+  if(!text) return [];
+  const parts = text.split(/(?<=[.!?।…\n])\s+/);
+  const chunks = []; let cur = "";
+  const push = () => { if(cur.trim()) chunks.push(cur.trim()); cur = ""; };
+  for(let p of parts){
+    while(p.length > CHUNK_MAX){
+      let cut = p.lastIndexOf(" ", CHUNK_MAX); if(cut < 500) cut = CHUNK_MAX;
+      if(cur) push();
+      chunks.push(p.slice(0,cut).trim()); p = p.slice(cut).trim();
+    }
+    if((cur + " " + p).length > CHUNK_MAX) push();
+    cur += (cur ? " " : "") + p;
+  }
+  push();
+  return chunks;
+}
+
+// ---------- wav helpers ----------
+function b64ToBytes(b64){
+  const bin = atob(b64); const u = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+  return u;
+}
+function parseWav(u8){
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+  const tag = (o) => String.fromCharCode(u8[o],u8[o+1],u8[o+2],u8[o+3]);
+  if(tag(0)!=="RIFF" || tag(8)!=="WAVE") throw new Error("Audio WAV format me nahi aaya.");
+  let o = 12, fmt = null, data = null;
+  while(o + 8 <= u8.length){
+    const id = tag(o); let size = dv.getUint32(o+4, true);
+    const start = o + 8;
+    if(id === "fmt "){
+      fmt = { channels: dv.getUint16(start+2,true), rate: dv.getUint32(start+4,true), bits: dv.getUint16(start+14,true) };
+    } else if(id === "data"){
+      if(start + size > u8.length) size = u8.length - start; // streaming-style header safety
+      data = u8.subarray(start, start + size); break;
+    }
+    o = start + size + (size % 2);
+  }
+  if(!fmt || !data) throw new Error("WAV parse nahi hua.");
+  return { fmt, data };
+}
+function mergeWavs(list){
+  const parsed = list.map(parseWav);
+  const f = parsed[0].fmt;
+  const total = parsed.reduce((s,p)=>s+p.data.length,0);
+  const out = new Uint8Array(44 + total); const dv = new DataView(out.buffer);
+  const w = (o,s)=>{ for(let i=0;i<s.length;i++) out[o+i]=s.charCodeAt(i); };
+  w(0,"RIFF"); dv.setUint32(4,36+total,true); w(8,"WAVE"); w(12,"fmt ");
+  dv.setUint32(16,16,true); dv.setUint16(20,1,true); dv.setUint16(22,f.channels,true);
+  dv.setUint32(24,f.rate,true); dv.setUint32(28,f.rate*f.channels*f.bits/8,true);
+  dv.setUint16(32,f.channels*f.bits/8,true); dv.setUint16(34,f.bits,true);
+  w(36,"data"); dv.setUint32(40,total,true);
+  // 0.35s silence feel between chunks is already inside TTS tails; just concat
+  let pos = 44; for(const p of parsed){ out.set(p.data,pos); pos += p.data.length; }
+  return new Blob([out], {type:"audio/wav"});
+}
+
+// ---------- voice ----------
+async function ttsChunk(key, text){
+  const res = await fetch(TTS_URL, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "api-subscription-key": key },
+    body: JSON.stringify({
+      text,
+      target_language_code: $("lang").value,
+      speaker: $("speaker").value,
+      model: "bulbul:v3",
+      pace: +$("pace").value,
+      speech_sample_rate: 24000,
+      output_audio_codec: "wav"
+    })
+  });
+  if(!res.ok){
+    let d = ""; try{ d = JSON.stringify(await res.json()); }catch(e){}
+    throw new Error("TTS error " + res.status + " " + d);
+  }
+  const j = await res.json();
+  if(!j.audios || !j.audios.length) throw new Error("TTS se audio nahi mila.");
+  return b64ToBytes(j.audios[0]);
+}
+async function makeVoice(){
+  const key = getKey(), script = getScript();
+  const chunks = chunkText(script);
+  const parts = [];
+  for(let i=0;i<chunks.length;i++){
+    setStatus(`Voice ban rahi hai... ${i+1}/${chunks.length}`);
+    setBar(i/chunks.length*100);
+    parts.push(await ttsChunk(key, chunks[i]));
+  }
+  setBar(100);
+  const blob = mergeWavs(parts);
+  if(wavBlobUrl) URL.revokeObjectURL(wavBlobUrl);
+  wavBlobUrl = URL.createObjectURL(blob);
+  $("player").src = wavBlobUrl;
+  $("voiceCard").style.display = "block";
+  setTimeout(()=>setBar(null),600);
+}
+$("dl").onclick = () => {
+  if(!wavBlobUrl) return;
+  const a = document.createElement("a"); a.href = wavBlobUrl; a.download = "horror-voice.wav"; a.click();
+};
+
+// ---------- metadata ----------
+async function makeMeta(){
+  const key = getKey(), script = getScript();
+  setStatus("Metadata ban raha hai...");
+  const lang = $("metaLang").value;
+  const prompt = `You are a YouTube/Instagram growth expert for horror story channels.
+Read the horror story script below and create metadata in ${lang}.
+Return ONLY valid JSON (no markdown, no explanation) with exactly these keys:
+{
+ "titles": [6 clickbait-but-honest titles, max 70 chars each],
+ "hook": "one scary first-line hook for the first 3 seconds",
+ "description": "SEO description, 120-180 words, no spoilers of the ending, end with a call to action",
+ "hashtags": [15 hashtags starting with #],
+ "tags": [20 search keywords without #],
+ "thumbnail_text": [3 short thumbnail texts, max 4 words each],
+ "thumbnail_idea": "one-line visual idea for the thumbnail",
+ "shorts_caption": "short caption for Reels/Shorts with 5 hashtags",
+ "category": "genre like Haunted House / Paranormal / Psychological / Real Incident style",
+ "content_warning": "short viewer discretion line"
+}
+
+SCRIPT:
+"""
+${script.slice(0, 12000)}
+"""`;
+  const res = await fetch(CHAT_URL, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "api-subscription-key": key },
+    body: JSON.stringify({
+      model: "sarvam-30b",
+      messages: [{ role:"user", content: prompt }],
+      temperature: 0.8,
+      max_tokens: 3000
+    })
+  });
+  if(!res.ok){
+    let d = ""; try{ d = JSON.stringify(await res.json()); }catch(e){}
+    throw new Error("Chat error " + res.status + " " + d);
+  }
+  const j = await res.json();
+  let txt = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || "";
+  $("raw").textContent = txt;
+  txt = txt.replace(/<think>[\s\S]*?<\/think>/gi,"").replace(/```json|```/g,"").trim();
+  const a = txt.indexOf("{"), b = txt.lastIndexOf("}");
+  if(a<0 || b<0) throw new Error("Metadata JSON nahi mila. Dobara try karo.");
+  let data;
+  try{ data = JSON.parse(txt.slice(a,b+1)); }
+  catch(e){ throw new Error("Metadata JSON parse nahi hua. Dobara try karo."); }
+  lastMeta = data; renderMeta(data);
+}
+function copy(text, btn){
+  navigator.clipboard.writeText(text).then(()=>{
+    if(btn){ const o=btn.textContent; btn.textContent="✓"; setTimeout(()=>btn.textContent=o,900); }
+  });
+}
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+function section(parent, label){ parent.appendChild(el("div","lbl",label)); }
+function listItems(parent, arr){
+  (arr||[]).forEach(t=>{
+    const it = el("div","item"); it.appendChild(el("div","t",t));
+    const b = el("button","small","Copy"); b.onclick=()=>copy(t,b); it.appendChild(b); parent.appendChild(it);
+  });
+}
+function textBlock(parent, t){
+  const it = el("div","item"); it.appendChild(el("div","t",t));
+  const b = el("button","small","Copy"); b.onclick=()=>copy(t,b); it.appendChild(b); parent.appendChild(it);
+}
+function chipBlock(parent, arr, joiner){
+  const wrap = el("div","chips");
+  (arr||[]).forEach(t=>wrap.appendChild(el("span","chip",t)));
+  parent.appendChild(wrap);
+  const b = el("button","small","Sab copy"); b.style.marginTop="8px"; b.onclick=()=>copy((arr||[]).join(joiner),b); parent.appendChild(b);
+}
+function renderMeta(d){
+  const o = $("metaOut"); o.innerHTML = "";
+  section(o,"Titles"); listItems(o,d.titles);
+  if(d.hook){ section(o,"Hook (first 3 sec)"); textBlock(o,d.hook); }
+  if(d.description){ section(o,"Description"); textBlock(o,d.description); }
+  if(d.hashtags){ section(o,"Hashtags"); chipBlock(o,d.hashtags," "); }
+  if(d.tags){ section(o,"Tags (YouTube)"); chipBlock(o,d.tags,", "); }
+  if(d.thumbnail_text){ section(o,"Thumbnail text"); listItems(o,d.thumbnail_text); }
+  if(d.thumbnail_idea){ section(o,"Thumbnail idea"); textBlock(o,d.thumbnail_idea); }
+  if(d.shorts_caption){ section(o,"Shorts / Reels caption"); textBlock(o,d.shorts_caption); }
+  if(d.category){ section(o,"Category"); textBlock(o,d.category); }
+  if(d.content_warning){ section(o,"Content warning"); textBlock(o,d.content_warning); }
+  $("metaCard").style.display = "block";
+}
+$("copyAll").onclick = function(){
+  if(!lastMeta) return;
+  const d = lastMeta, L = [];
+  if(d.titles) L.push("TITLES:\n" + d.titles.join("\n"));
+  if(d.hook) L.push("HOOK:\n" + d.hook);
+  if(d.description) L.push("DESCRIPTION:\n" + d.description);
+  if(d.hashtags) L.push("HASHTAGS:\n" + d.hashtags.join(" "));
+  if(d.tags) L.push("TAGS:\n" + d.tags.join(", "));
+  if(d.thumbnail_text) L.push("THUMBNAIL TEXT:\n" + d.thumbnail_text.join("\n"));
+  if(d.thumbnail_idea) L.push("THUMBNAIL IDEA:\n" + d.thumbnail_idea);
+  if(d.shorts_caption) L.push("SHORTS CAPTION:\n" + d.shorts_caption);
+  copy(L.join("\n\n"), this);
+};
+
+// ---------- runners ----------
+async function run(fn){
+  busy(true); setStatus("");
+  try{ await fn(); setStatus("Ho gaya ✅","ok"); }
+  catch(e){ setBar(null); setStatus(friendly(e),"err"); }
+  finally{ busy(false); }
+}
+$("btnVoice").onclick = () => run(makeVoice);
+$("btnMeta").onclick = () => run(makeMeta);
+$("btnBoth").onclick = () => run(async () => { await makeVoice(); await makeMeta(); });
+updateCount();
+</script>
+</body>
+</html>
